@@ -3175,6 +3175,33 @@ window.addEventListener('online',updateNet); window.addEventListener('offline',u
 function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('scrim').classList.add('open'); }
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('scrim').classList.remove('open'); }
 
+/* ============ 版本与更新 ============ */
+const BUILD='20260804.3';
+function showVersion(){
+  let tag=document.getElementById('verTag');
+  if(!tag){
+    tag=document.createElement('div'); tag.id='verTag';
+    tag.style.cssText='position:fixed;right:8px;bottom:8px;z-index:9999;background:rgba(31,58,82,.85);color:#fff;font-size:11px;padding:4px 8px;border-radius:8px;cursor:pointer;display:flex;gap:6px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.2)';
+    tag.innerHTML='<span>v'+BUILD+'</span><span style="text-decoration:underline;opacity:.85">强制刷新</span>';
+    document.body.appendChild(tag);
+    tag.onclick=()=>{ location.reload(true); };
+  }
+}
+function initSW(){
+  if(!('serviceWorker' in navigator)) return;
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').then(reg=>{
+      reg.addEventListener('updatefound',()=>{
+        const nw=reg.installing; if(!nw) return;
+        nw.addEventListener('statechange',()=>{ if(nw.state==='installed'&&navigator.serviceWorker.controller) location.reload(); });
+      });
+      if(reg.waiting&&navigator.serviceWorker.controller) reg.waiting.postMessage({type:'SKIP_WAITING'});
+    }).catch(()=>{});
+  });
+  let reloading=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!reloading){ reloading=true; location.reload(); } });
+}
+
 /* ============ 初始化 ============ */
 function init(){
   loadDB();
@@ -3189,6 +3216,8 @@ function init(){
   updateNet();
   render();
   startClock();
+  showVersion();
+  initSW();
 }
 init();
 </script>
