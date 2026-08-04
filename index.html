@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Workbuddy 工作台</title>
+<!--PWA_INJECTED-->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#3E6E96">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -214,11 +215,15 @@
   .cal-cell.today{border-color:var(--mint);background:#FBFCFD}
   .cal-cell .dnum{font-size:13px;font-weight:700;color:var(--ink)}
   .cal-cell.today .dnum{color:var(--green)}
-  .cal-tag{font-size:11px;line-height:1.25;padding:3px 6px;border-radius:6px;background:var(--mint-soft);color:#1F3A52;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .cal-tag{font-size:11px;line-height:1.25;padding:3px 6px;border-radius:6px;background:var(--mint-soft);color:#1F3A52;display:flex;align-items:center;gap:4px;overflow:hidden;cursor:pointer}
+  .cal-tag .cal-tag-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+  .cal-tag-del{flex:0 0 auto;width:16px;height:16px;line-height:15px;text-align:center;border-radius:50%;background:rgba(190,59,46,.13);color:var(--red);font-weight:700;font-size:13px}
+  .cal-tag-del:active{background:rgba(190,59,46,.28)}
   .cal-tag.high{background:#F7E4E1;color:var(--red)}
   .cal-tag.mid{background:#fff3df;color:#d9912b}
   .cal-tag.low{background:var(--mint-soft);color:#1F3A52}
-  .cal-tag.done{opacity:.5;text-decoration:line-through}
+  .cal-tag.done{opacity:.5}
+  .cal-tag.done .cal-tag-t{text-decoration:line-through}
   .cal-add-day{font-size:11px;color:var(--mint);margin-top:auto;align-self:flex-end;cursor:pointer;padding:2px 4px;border-radius:4px}
   .cal-add-day:hover{background:var(--mint-soft)}
   .cal-lunar{font-size:10px;line-height:1.2;color:#9aa6a0;margin-top:1px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2010,13 +2015,22 @@ function renderCalendar(y,m){
   const t=todayISO();
   for(let d=1;d<=days;d++){
     const iso=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const items=db.plan.monthly.filter(x=>x.due===iso);
+    const items=db.plan.monthly.filter(x=>{
+      if(!x.due) return false;
+      if(iso>x.due) return false;
+      if(x.sdate) return iso>=x.sdate;
+      return iso===x.due;
+    });
     const isToday=iso===t;
     const lun=lunarText(y,m,d);
     cells+='<div class="cal-cell'+(isToday?' today':'')+'">'+
       '<span class="dnum">'+d+'</span>'+
       '<span class="cal-lunar'+(lun.fest?' fest':'')+'">'+esc(lun.text)+'</span>'+
-      items.map(x=>'<div class="cal-tag'+(x.prio==='high'?' high':x.prio==='mid'?' mid':' low')+(x.done?' done':'')+'" data-planchk="'+x.id+'" data-sub="monthly" title="'+esc(x.title)+'">'+esc(x.title)+'</div>').join('')+
+      items.map(x=>{
+        const anchor=x.sdate?iso===x.sdate:iso===x.due;
+        const del=anchor?'<span class="cal-tag-del" data-delplan="'+x.id+'" data-sub="monthly" title="删除计划">×</span>':'';
+        return '<div class="cal-tag'+(x.prio==='high'?' high':x.prio==='mid'?' mid':' low')+(x.done?' done':'')+'" data-planchk="'+x.id+'" data-sub="monthly" title="'+esc(x.title)+'"><span class="cal-tag-t">'+esc(x.title)+'</span>'+del+'</div>';
+      }).join('')+
       '<span class="cal-add-day" data-calday="'+iso+'">+</span>'+
     '</div>';
   }
@@ -3108,6 +3122,7 @@ function init(){
 }
 init();
 </script>
+<!--SW_INJECTED-->
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(console.error);
