@@ -3085,20 +3085,20 @@ function handleForm(f){
       }
     }
     db.plan[sub].push(rec); saveDB(); render(); return; }
-  if(f.dataset.exam){ const g=f=>f.querySelector('[data-key="'+f+'"]').value;
+  if(f.dataset.exam){ const g=k=>f.querySelector('[data-key="'+k+'"]').value;
     db.work.exam.push({id:uid(),name:g('name'),cls:g('cls'),avg:Number(g('avg'))||0,max:Number(g('max'))||0,pass:Number(g('pass'))||0}); saveDB(); render(); return; }
   if(f.dataset.gen){ const [top,sub]=f.dataset.gen.split(':'); const cfg=fieldCfg(top,sub); const rec={id:uid()};
     cfg.forEach(c=>{ rec[c.k]=f.querySelector('[data-key="'+c.k+'"]').value; });
     getArr(top,sub).push(rec); saveDB(); render(); return; }
   if(f.dataset.recform){ const sub=f.dataset.recform; const g=k=>f.querySelector('[data-key="'+k+'"]').value;
     db.records[sub].push({id:uid(),name:g('name'),date:g('date'),place:g('place'),rate:g('rate'),feel:g('feel'),img:g('img')}); saveDB(); render(); return; }
-  if(f.dataset.book){ const g=f=>f.querySelector('[data-key="'+f+'"]').value;
+  if(f.dataset.book){ const g=k=>f.querySelector('[data-key="'+k+'"]').value;
     db.reading.books.push({id:uid(),title:g('title'),author:g('author'),total:Number(g('total'))||0,current:Number(g('current'))||0}); saveDB(); render(); return; }
-  if(f.dataset.bill){ const g=f=>f.querySelector('[data-key="'+f+'"]').value;
+  if(f.dataset.bill){ const g=k=>f.querySelector('[data-key="'+k+'"]').value;
     db.finance.bills.push({id:uid(),type:g('type'),amount:Number(g('amount'))||0,cate:g('cate'),date:g('date')||todayISO(),note:g('note')}); saveDB(); render(); return; }
-  if(f.dataset.budget){ const g=f=>f.querySelector('[data-key="'+f+'"]').value;
+  if(f.dataset.budget){ const g=k=>f.querySelector('[data-key="'+k+'"]').value;
     db.finance.budgets.push({id:uid(),cate:g('cate'),month:Number(g('month'))||new Date().getMonth()+1,budget:Number(g('budget'))||0}); saveDB(); render(); return; }
-  if(f.dataset.setbudget){ const g=f=>f.querySelector('[data-key="'+f+'"]').value;
+  if(f.dataset.setbudget){ const g=k=>f.querySelector('[data-key="'+k+'"]').value;
     const m=new Date().getMonth()+1;
     db.finance.budgets=db.finance.budgets.filter(b=>b.month!==m);
     const v=Number(g('budget'))||0;
@@ -3124,15 +3124,15 @@ function handleForm(f){
       state.incCate=''; saveDB(); render(); toast('收入已记录');
     }
     return; }
-  if(f.dataset.save){ const g=f=>f.querySelector('[data-key="'+f+'"]').value;
+  if(f.dataset.save){ const g=k=>f.querySelector('[data-key="'+k+'"]').value;
     db.finance.savings.push({id:uid(),name:g('name'),target:Number(g('target'))||0,saved:Number(g('saved'))||0}); saveDB(); render(); return; }
-  if(f.dataset.asset){ const g=f=>f.querySelector('[data-key="'+f+'"]').value;
+  if(f.dataset.asset){ const g=k=>f.querySelector('[data-key="'+k+'"]').value;
     db.finance.assets.push({id:uid(),name:g('name'),amount:Number(g('amount'))||0,kind:g('kind')}); saveDB(); render(); return; }
-  if(f.dataset.happy){ const g=f=>f.querySelector('[data-key="'+f+'"]').value;
+  if(f.dataset.happy){ const g=k=>f.querySelector('[data-key="'+k+'"]').value;
     db.happiness.push({id:uid(),text:g('text'),date:g('date')||todayISO(),mood:g('mood')}); saveDB(); render(); return; }
-  if(f.dataset.cd){ const g=f=>f.querySelector('[data-key="'+f+'"]').value; const cb=f.querySelector('[data-key="repeat"]');
+  if(f.dataset.cd){ const g=k=>f.querySelector('[data-key="'+k+'"]').value; const cb=f.querySelector('[data-key="repeat"]');
     db.countdowns.push({id:uid(),name:g('name'),date:g('date'),repeat:cb?cb.checked:false}); saveDB(); render(); return; }
-  if(f.dataset.memo){ const g=f=>f.querySelector('[data-key="'+f+'"]').value;
+  if(f.dataset.memo){ const g=k=>f.querySelector('[data-key="'+k+'"]').value;
     db.memo.push({id:uid(),title:g('title')||'未命名',content:g('content')||'',date:todayISO()}); saveDB(); render(); return; }
 }
 
@@ -3176,7 +3176,7 @@ function openSidebar(){ document.getElementById('sidebar').classList.add('open')
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('scrim').classList.remove('open'); }
 
 /* ============ 版本与更新 ============ */
-const BUILD='20260804.3';
+const BUILD='20260804.4';
 function showVersion(){
   let tag=document.getElementById('verTag');
   if(!tag){
