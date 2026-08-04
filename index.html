@@ -66,6 +66,12 @@
   .navitem .del{margin-left:auto;opacity:0;font-size:12px;color:#ffb4ae}
   .navitem:hover .del{opacity:.8}
   .navitem .del:hover{opacity:1}
+  .navgroup{position:relative}
+  .navgroup.dragging{opacity:.55}
+  .navgroup.dragging .navitem{background:var(--mint-soft);color:#16222E;box-shadow:0 6px 16px rgba(22,34,46,.22)}
+  .grip{cursor:grab;opacity:.35;font-size:15px;line-height:1;flex:0 0 auto;touch-action:none;user-select:none;padding:0 2px;transition:.15s}
+  .grip:hover{opacity:.7}
+  .grip:active{cursor:grabbing;opacity:1}
   .subnav{display:none;flex-direction:column;padding:2px 0 8px 30px}
   .subnav.open{display:flex;animation:fadeIn .25s}
   .subitem{
@@ -1502,7 +1508,7 @@ function defaultModules(){
       {id:'exercise',name:'锻炼打卡'},{id:'water',name:'喝水打卡'}
     ]},
     {id:'records', name:'记录', icon:'rec', subs:[
-      {id:'video',name:'影视记录'},{id:'drink',name:'饮品记录'},{id:'food',name:'美食记录'},
+      {id:'drink',name:'饮品记录'},{id:'food',name:'美食记录'},
       {id:'travel',name:'旅游记录'}
     ]},
     {id:'reading', name:'阅读', icon:'read', subs:[
@@ -1549,6 +1555,8 @@ function fieldCfg(top, sub){
   };
   return M[top+':'+sub] || G([{k:'content',l:'内容',t:'area'}]);
 }
+/* 记录子模块展示元数据（名称/单位/颜色），按实际子模块动态取用 */
+const REC_META={drink:{name:'饮品',unit:'杯',color:'#4F8CBF'},food:{name:'美食',unit:'家',color:'#2E8B6F'},travel:{name:'旅游',unit:'次',color:'#d9912b'},video:{name:'影视',unit:'部',color:'#1F3A52'}};
 
 /* ============ 存储 ============ */
 const DB_KEY='workbuddy:db:v1';
@@ -1633,12 +1641,13 @@ function loadDB(){
     }
   });
   // 清理已从默认模块中移除的子模块（如阅读打卡、象棋打卡）
-  const removedSubs={'checkin':['reading','chess']};
+  const removedSubs={'checkin':['reading','chess'], 'records':['video']};
   db.modules.forEach(m=>{
     const rm=removedSubs[m.id];
     if(rm) m.subs=m.subs.filter(s=>!rm.includes(s.id));
   });
   if(db.checkin.chess) delete db.checkin.chess;
+  if(db.records && db.records.video) delete db.records.video;
   // 清理已从默认模块中移除的一级模块（如工作、英语学习），并删除其残留数据
   const removedModules=['work','english'];
   db.modules=db.modules.filter(m=>!removedModules.includes(m.id));
@@ -1657,7 +1666,7 @@ function loadDB(){
   // migrate plan items to quadrant model
   ['daily','weekly'].forEach(k=>{ if(db.plan && db.plan[k]) db.plan[k].forEach(x=>{ if(!x.quadrant){ x.quadrant = x.prio==='high'?'iu':x.prio==='mid'?'inu':'ninu'; } }); });
   // migrate records.photo -> records.video (影视记录)
-  if(db.records && db.records.photo){ db.records.video=db.records.photo; delete db.records.photo; }
+  if(db.records && db.records.photo){ delete db.records.photo; }
   // 用户指定写入的阅读笔记：一次性合并进 db.reading.notes（按摘录去重，仅执行一次）
   if(!db._seededNotes){
     if(!db.reading) db.reading={books:[],notes:[]};
@@ -1694,24 +1703,28 @@ let dragState=null;
 /* ============ 导航渲染 ============ */
 function renderNav(){
   const nav=document.getElementById('nav'); nav.innerHTML='';
+  initNavDrag();
   db.modules.forEach(m=>{
     const active = state.top===m.id;
+    const group=document.createElement('div'); group.className='navgroup'; group.dataset.navid=m.id;
     const item=document.createElement('button');
     item.className='navitem'+(active?' active':'');
-    item.innerHTML=I[m.icon]+'<span>'+esc(m.name)+'</span>'+
+    item.innerHTML='<span class="grip" data-drag="'+m.id+'" title="拖动排序">⠿</span>'+I[m.icon]+'<span>'+esc(m.name)+'</span>'+
       (m.subs.length?'<span style="margin-left:auto;opacity:.6">'+I.chev+'</span>':'')+
       '<span class="del" data-delmod="'+m.id+'">删除</span>';
     item.onclick=(e)=>{
+      if(e.target.closest('[data-drag]')) return;
       if(e.target.dataset.delmod){ if(confirm('确认删除模块「'+m.name+'」？数据将一并清除。')){ deleteModule(m.id);} return; }
       if(m.id==='records' || m.id==='finance'){ state.top=m.id; state.sub=null; }
       else if(m.subs.length){ state.top=m.id; state.sub=state.sub&&hasSub(m.id,state.sub)?state.sub:m.subs[0].id; }
       else { state.top=m.id; state.sub=null; }
       closeSidebar(); render();
     };
-    nav.appendChild(item);
+    group.appendChild(item);
     if(m.subs.length){
       const sub=document.createElement('div');
       sub.className='subnav'+(active?' open':'');
+      sub.dataset.navid=m.id;
       m.subs.forEach(s=>{
         const si=document.createElement('button');
         si.className='subitem'+(active&&state.sub===s.id?' active':'');
@@ -1722,8 +1735,9 @@ function renderNav(){
         };
         sub.appendChild(si);
       });
-      nav.appendChild(sub);
+      group.appendChild(sub);
     }
+    nav.appendChild(group);
   });
   // bottom nav (mobile, 5 most-used)
   const bn=document.getElementById('bottomnav'); bn.innerHTML='';
@@ -1738,6 +1752,44 @@ function renderNav(){
 function hasSub(top,sub){const m=db.modules.find(x=>x.id===top);return m&&m.subs.some(s=>s.id===sub);}
 function deleteModule(id){ db.modules=db.modules.filter(m=>m.id!==id); if(db[id]) delete db[id]; if(state.top===id){state.top='home';state.sub=null;} saveDB(); render(); toast('已删除模块'); }
 function deleteSub(top,sub){ const m=db.modules.find(x=>x.id===top); if(m) m.subs=m.subs.filter(s=>s.id!==sub); if(db[top]) delete db[top][sub]; if(state.top===top&&state.sub===sub){state.sub=m&&m.subs.length?m.subs[0].id:null;} saveDB(); render(); toast('已删除子模块'); }
+
+/* 左侧导航拖拽排序（指针事件，桌面+触屏通用） */
+let navDrag=null;
+function initNavDrag(){
+  const nav=document.getElementById('nav'); if(!nav || nav._dragBound) return; nav._dragBound=true;
+  nav.addEventListener('pointerdown', e=>{
+    const grip=e.target.closest('[data-drag]'); if(!grip) return;
+    e.preventDefault();
+    const group=grip.closest('.navgroup');
+    navDrag={group, moved:false, pid:e.pointerId};
+    group.classList.add('dragging');
+    try{ grip.setPointerCapture(e.pointerId); }catch(_){}
+    grip.addEventListener('pointermove', onNavDragMove);
+    grip.addEventListener('pointerup', onNavDragEnd);
+    grip.addEventListener('pointercancel', onNavDragEnd);
+  });
+}
+function onNavDragMove(e){
+  if(!navDrag) return; navDrag.moved=true;
+  const nav=document.getElementById('nav');
+  const groups=[...nav.querySelectorAll('.navgroup')].filter(g=>g!==navDrag.group);
+  let target=null;
+  for(const g of groups){ const r=g.getBoundingClientRect(); if(e.clientY < r.top + r.height/2){ target=g; break; } }
+  if(target) nav.insertBefore(navDrag.group, target); else nav.appendChild(navDrag.group);
+}
+function onNavDragEnd(e){
+  if(!navDrag) return;
+  const grip=e.target;
+  grip.removeEventListener('pointermove', onNavDragMove);
+  grip.removeEventListener('pointerup', onNavDragEnd);
+  grip.removeEventListener('pointercancel', onNavDragEnd);
+  navDrag.group.classList.remove('dragging');
+  const nav=document.getElementById('nav');
+  const order=[...nav.querySelectorAll('.navgroup')].map(g=>g.dataset.navid);
+  db.modules.sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
+  const moved=navDrag.moved; navDrag=null; saveDB();
+  if(moved) toast('顺序已保存');
+}
 
 /* ============ 主渲染 ============ */
 function render(){
@@ -2442,12 +2494,8 @@ function countRecords(sub,range){
 }
 function recordMonthBars(){
   const y=new Date().getFullYear();
-  const types=[
-    {k:'video',name:'影视',color:'#1F3A52'},
-    {k:'drink',name:'饮品',color:'#4F8CBF'},
-    {k:'food',name:'美食',color:'#2E8B6F'},
-    {k:'travel',name:'旅游',color:'#d9912b'}
-  ];
+  const recMod=db.modules.find(m=>m.id==='records');
+  const types=(recMod?recMod.subs:[]).map(s=>({k:s.id,name:(REC_META[s.id]||{name:s.name}).name,color:(REC_META[s.id]||{color:'#888'}).color}));
   const months=[];
   for(let i=1;i<=12;i++){
     const ym=y+'-'+String(i).padStart(2,'0');
@@ -2468,13 +2516,9 @@ function recordMonthBars(){
 }
 function renderRecords(){
   const range=state.recRange||'month';
-  const types=[
-    {k:'video',name:'影视',unit:'部'},
-    {k:'drink',name:'饮品',unit:'杯'},
-    {k:'food',name:'美食',unit:'家'},
-    {k:'reading',name:'阅读',unit:'本',src:true},
-    {k:'travel',name:'旅游',unit:'次'}
-  ];
+  const recMod=db.modules.find(m=>m.id==='records');
+  const recSubs=recMod?recMod.subs:[];
+  const types=recSubs.map(s=>({k:s.id,name:(REC_META[s.id]||{name:s.name}).name,unit:(REC_META[s.id]||{unit:''}).unit})).concat([{k:'reading',name:'阅读',unit:'本',src:true}]);
   const counts=types.map(t=>t.src?db.reading.books.length:countRecords(t.k,range));
   const tabs=[['week','本周'],['month','本月'],['year','本年']].map(v=>'<button class="tab'+(range===v[0]?' active':'')+'" data-recrange="'+v[0]+'">'+v[1]+'</button>').join('');
   const cards=types.map((t,i)=>{
@@ -2485,7 +2529,7 @@ function renderRecords(){
   const bars=recordMonthBars();
   // 本月精选回忆
   const picks=[];
-  const pickTypes=[{k:'video',name:'影视'},{k:'drink',name:'饮品'},{k:'food',name:'美食'},{k:'travel',name:'旅游'}];
+  const pickTypes=recSubs.map(s=>({k:s.id,name:(REC_META[s.id]||{name:s.name}).name}));
   pickTypes.forEach(t=>{
     const arr=(db.records[t.k]||[]).filter(x=>x.rate);
     if(!arr.length) return;
@@ -2501,7 +2545,8 @@ function renderRecords(){
   return '<div class="card"><div class="section-title">'+I.rec+' 记录统计</div><div class="tabs">'+tabs+'</div><div class="rec-types">'+cards+'</div></div>'+pie+'<div class="card"><div class="section-title">月度记录趋势</div>'+bars+'</div>'+pickHtml;
 }
 function renderRecordSub(sub){
-  if(['video','drink','food','travel'].includes(sub)) return renderRecordGallery('records',sub);
+  const recMod=db.modules.find(m=>m.id==='records');
+  if(recMod && recMod.subs.some(s=>s.id===sub)) return renderRecordGallery('records',sub);
   return renderGeneric('records',sub);
 }
 function compressImg(file,maxWidth){
