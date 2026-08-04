@@ -2005,7 +2005,7 @@ function planForm(sub){
     qSel+prioSel+timeFields+
     '<label class="fld" style="flex:0 0 100px"><span>进度(%)</span><input data-key="progress" type="number" min="0" max="100" value="0"></label>'+
     '<label class="fld" style="flex:2"><span>描述(可选)</span><input data-key="desc" type="text"></label>'+
-    '<button class="btn primary" type="submit" style="flex:0 0 auto">添加目标</button>'+
+    '<button class="btn primary" type="button" data-submit="1" style="flex:0 0 auto">添加目标</button>'+
   '</div></form>';
 }
 function renderMatrix(sub){
@@ -2464,7 +2464,7 @@ function renderExam(){
   const arr=db.work.exam;
   const form='<form data-exam="1"><div class="row">'+
     fld('name','考试名称','text')+fld('cls','班级','text')+fld('avg','平均分','num')+fld('max','最高分','num')+fld('pass','及格率(%)','num')+
-    '<button class="btn primary" type="submit" style="flex:0 0 auto">添加</button></div></form>';
+    '<button class="btn primary" type="button" data-submit="1" style="flex:0 0 auto">添加</button></div></form>';
   let chart='';
   if(arr.length){
     const vals=arr.map(x=>x.avg);
@@ -2596,7 +2596,7 @@ function renderRecordGallery(top,sub){
     '<label class="fld"><span>日期</span><input data-key="date" type="date" value="'+today+'"></label>'+
     '<label class="fld"><span>地点/平台</span><input data-key="place" type="text"></label>'+
     '<label class="fld" style="grid-column:1/-1"><span>感受</span><textarea data-key="feel" rows="2"></textarea></label>'+
-    '<button class="btn primary" type="submit" style="grid-column:1/-1;max-width:200px">添加</button>'+
+    '<button class="btn primary" type="button" data-submit="1" style="grid-column:1/-1;max-width:200px">添加</button>'+
   '</div></form></div>';
   let wall=arr.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(x=>{
     const rateTag='<span class="pill '+(Number(x.rate)>=4?'in':'low')+'">'+esc(x.rate||'-')+'分</span>';
@@ -2615,7 +2615,7 @@ function renderGeneric(top,sub){
     extra='<div class="row" style="margin-bottom:12px"><label class="fld" style="flex:0 0 200px"><span>按熟练度筛选</span><select id="lvFilter"><option value="">全部</option><option>入门</option><option>熟悉</option><option>掌握</option></select></label></div>';
   }
   const form='<form data-gen="'+top+':'+sub+'"><div class="row">'+cfg.map(f=>fieldHTML(f)).join('')+
-    '<button class="btn primary" type="submit" style="flex:0 0 auto">添加</button></div></form>';
+    '<button class="btn primary" type="button" data-submit="1" style="flex:0 0 auto">添加</button></div></form>';
   const filterVal=document.getElementById('lvFilter')?document.getElementById('lvFilter').value:'';
   let listArr=arr;
   if(top==='english'&&sub==='words'&&filterVal) listArr=arr.filter(x=>x.lv===filterVal);
@@ -2645,7 +2645,7 @@ function renderBooks(){
   const arr=db.reading.books;
   const form='<form data-book="1"><div class="row">'+
     fld('title','书名','text')+fld('author','作者','text')+fld('total','总页数','num')+fld('current','当前页','num')+
-    '<button class="btn primary" type="submit" style="flex:0 0 auto">添加</button></div></form>';
+    '<button class="btn primary" type="button" data-submit="1" style="flex:0 0 auto">添加</button></div></form>';
   let list=arr.map(x=>{ const p=x.total>0?Math.round(x.current/x.total*100):0;
     return '<div class="list-item"><div class="body"><div style="font-weight:600">'+esc(x.title)+(x.author?' <span class="mini">· '+esc(x.author)+'</span>':'')+'</div>'+
       '<div class="meta"><span>'+esc(x.current)+' / '+esc(x.total)+' 页</span></div>'+
@@ -2744,7 +2744,7 @@ function renderExpense(){
       '<label class="fld" style="flex:1"><span>日期</span><input id="expDate" type="date" value="'+todayISO()+'"></label>'+
     '</div>'+
     '<label class="fld"><span>备注</span><input id="expNote" type="text" placeholder="可选"></label>'+
-    '<div style="display:flex;gap:10px;margin-top:12px"><button type="submit" class="btn primary" style="flex:1">保存</button><button type="button" class="btn" data-expcate="">取消</button></div>'+
+    '<div style="display:flex;gap:10px;margin-top:12px"><button type="button" data-submit="1" class="btn primary" style="flex:1">保存</button><button type="button" class="btn" data-expcate="">取消</button></div>'+
   '</form></div>':'';
 
   const list=monthBills.filter(b=>b.type==='expense').sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).map(x=>
@@ -2760,7 +2760,7 @@ function renderExpense(){
   '</div>'+
   (state.showBudgetForm?'<div class="card"><div class="section-title">设置本月预算</div><form data-setbudget="1"><div class="row">'+
     '<label class="fld" style="flex:1"><span>本月总预算 ¥</span><input data-key="budget" type="number" value="'+(budgetTotal||'')+'" placeholder="输入金额"></label>'+
-    '<button class="btn primary" type="submit" style="flex:0 0 auto">保存</button>'+
+    '<button class="btn primary" type="button" data-submit="1" style="flex:0 0 auto">保存</button>'+
   '</div></form></div>':'')+
   '<div class="card"><div class="section-title">支出分类</div><div class="fin-cates">'+grid+'</div></div>'+
   inputForm+
@@ -2789,7 +2789,7 @@ function renderIncome(){
       '<label class="fld" style="flex:1"><span>日期</span><input id="incDate" type="date" value="'+todayISO()+'"></label>'+
     '</div>'+
     '<label class="fld"><span>备注</span><input id="incNote" type="text" placeholder="可选"></label>'+
-    '<div style="display:flex;gap:10px;margin-top:12px"><button type="submit" class="btn primary" style="flex:1">保存</button><button type="button" class="btn" data-inccate="">取消</button></div>'+
+    '<div style="display:flex;gap:10px;margin-top:12px"><button type="button" data-submit="1" class="btn primary" style="flex:1">保存</button><button type="button" class="btn" data-inccate="">取消</button></div>'+
   '</form></div>':'';
 
   const list=monthBills.filter(b=>b.type==='income').sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).map(x=>
@@ -2830,7 +2830,7 @@ function renderBills(){
   // 预算设置（点击预算后展开）
   const budgetForm=(state.showBudgetForm?'<div class="card"><div class="section-title">设置本月预算</div><form data-setbudget="1"><div class="row">'+
     '<label class="fld" style="flex:1"><span>本月总预算 ¥</span><input data-key="budget" type="number" value="'+(budgetTotal||'')+'" placeholder="输入金额"></label>'+
-    '<button class="btn primary" type="submit" style="flex:0 0 auto">保存</button>'+
+    '<button class="btn primary" type="button" data-submit="1" style="flex:0 0 auto">保存</button>'+
   '</div></form></div>':'');
 
   // 今日快速录入
@@ -2860,7 +2860,7 @@ function renderBudgets(){
   const arr=db.finance.budgets; const tm=new Date().getMonth()+1;
   const form='<form data-budget="1"><div class="row">'+
     fld('cate','分类','text')+'<label class="fld"><span>月份</span><input data-key="month" type="number" value="'+tm+'"></label>'+fld('budget','预算金额','num')+
-    '<button class="btn primary" type="submit" style="flex:0 0 auto">设置</button></div></form>';
+    '<button class="btn primary" type="button" data-submit="1" style="flex:0 0 auto">设置</button></div></form>';
   let list=arr.map(b=>{
     const real=db.finance.bills.filter(x=>x.type==='expense'&&x.cate===b.cate&&new Date(x.date).getMonth()+1===b.month).reduce((s,x)=>s+x.amount,0);
     const p=b.budget>0?Math.round(real/b.budget*100):0; const over=real>b.budget;
@@ -2875,7 +2875,7 @@ function renderBudgets(){
 function renderSavings(){
   const arr=db.finance.savings;
   const form='<form data-save="1"><div class="row">'+fld('name','目标名称','text')+fld('target','目标金额','num')+fld('saved','已存金额','num')+
-    '<button class="btn primary" type="submit" style="flex:0 0 auto">添加</button></div></form>';
+    '<button class="btn primary" type="button" data-submit="1" style="flex:0 0 auto">添加</button></div></form>';
   let list=arr.map(x=>{ const p=x.target>0?Math.round(x.saved/x.target*100):0;
     return '<div class="list-item"><div class="body"><div style="font-weight:600">'+esc(x.name)+'</div>'+
       '<div class="meta"><span>'+fmtMoney(x.saved)+' / '+fmtMoney(x.target)+'</span></div>'+
@@ -2890,7 +2890,7 @@ function renderAssets(){
   const form='<form data-asset="1"><div class="row">'+
     fld('name','项目','text')+fld('amount','金额','num')+
     '<label class="fld"><span>类型</span><select data-key="kind"><option value="asset">资产</option><option value="liability">负债</option></select></label>'+
-    '<button class="btn primary" type="submit" style="flex:0 0 auto">添加</button></div></form>';
+    '<button class="btn primary" type="button" data-submit="1" style="flex:0 0 auto">添加</button></div></form>';
   const assets=arr.filter(x=>x.kind==='asset'); const liab=arr.filter(x=>x.kind==='liability');
   const totalA=assets.reduce((s,x)=>s+x.amount,0); const totalL=liab.reduce((s,x)=>s+x.amount,0);
   let pie='';
@@ -2923,7 +2923,7 @@ function renderHappiness(){
   const form='<form data-happy="1"><div class="row">'+
     fld('text','今天的小确幸','text')+fld('date','日期','date')+
     '<label class="fld" style="flex:0 0 140px"><span>心情</span><select data-key="mood"><option>开心</option><option>平静</option><option>感动</option><option>满足</option><option>期待</option></select></label>'+
-    '<button class="btn primary" type="submit" style="flex:0 0 auto">记录</button></div></form>';
+    '<button class="btn primary" type="button" data-submit="1" style="flex:0 0 auto">记录</button></div></form>';
   // group by month
   const groups={};
   arr.slice().sort((a,b)=>b.date.localeCompare(a.date)).forEach(x=>{ const k=x.date.slice(0,7); (groups[k]=groups[k]||[]).push(x); });
@@ -2943,7 +2943,7 @@ function renderMemo(){
     '<div class="memo-desc">灵感、想法、素材，随记随存，本地保存</div>'+
     '<form data-memo="1"><div class="row">'+
       '<label class="fld" style="flex:1"><span>标题</span><input data-key="title" type="text" placeholder="给笔记起个名字"></label>'+
-      '<button class="btn primary" type="submit" style="flex:0 0 auto">新建</button>'+
+      '<button class="btn primary" type="button" data-submit="1" style="flex:0 0 auto">新建</button>'+
     '</div>'+
     '<label class="fld" style="width:100%;margin-top:10px"><span>内容</span><textarea data-key="content" rows="4" placeholder="写点什么..."></textarea></label>'+
   '</form></div>';
@@ -2979,7 +2979,7 @@ function bindContent(){
   });
   // clicks
   c.onclick=(e)=>{
-    const t=e.target.closest('[data-act],[data-done],[data-check],[data-checktoday],[data-planchk],[data-delplan],[data-quadadd],[data-calprev],[data-calnext],[data-calday],[data-monthview],[data-heat],[data-delexam],[data-delgen],[data-bkedit],[data-delbook],[data-bkcur],[data-delbill],[data-delbudget],[data-delsave],[data-delasset],[data-delhappy],[data-go],[data-monthfold],[data-wateradd],[data-delwater],[data-savegoal],[data-delcd],[data-delmemo],[data-billday],[data-billcate],[data-billtype],[data-addbill],[data-togglecdadd],[data-addcd],[data-addtoday],[data-earlycheck],[data-earlyadd],[data-earlyview],[data-earlytoggle],[data-encheck],[data-excheck],[data-entoggle],[data-enitem],[data-enprev],[data-ennext],[data-recrange],[data-gosub],[data-delrec],[data-editfin],[data-billfilter],[data-expcate],[data-inccate],[data-addexpense],[data-addincome],[data-goexp],[data-goinc]');
+    const t=e.target.closest('[data-act],[data-done],[data-check],[data-checktoday],[data-planchk],[data-delplan],[data-quadadd],[data-calprev],[data-calnext],[data-calday],[data-monthview],[data-heat],[data-delexam],[data-delgen],[data-bkedit],[data-delbook],[data-bkcur],[data-delbill],[data-delbudget],[data-delsave],[data-delasset],[data-delhappy],[data-go],[data-monthfold],[data-wateradd],[data-delwater],[data-savegoal],[data-delcd],[data-delmemo],[data-billday],[data-billcate],[data-billtype],[data-addbill],[data-togglecdadd],[data-addcd],[data-addtoday],[data-earlycheck],[data-earlyadd],[data-earlyview],[data-earlytoggle],[data-encheck],[data-excheck],[data-entoggle],[data-enitem],[data-enprev],[data-ennext],[data-recrange],[data-gosub],[data-delrec],[data-editfin],[data-billfilter],[data-expcate],[data-inccate],[data-addexpense],[data-addincome],[data-goexp],[data-goinc],[data-submit]');
     if(!t) return;
     const d=t.dataset;
     for(const _k in d){ if(d[_k]==='') d[_k]=true; }
@@ -3017,6 +3017,7 @@ function bindContent(){
     else if(d.addbill){ const note=document.getElementById('billNote').value; const amount=Number(document.getElementById('billAmount').value)||0; const type=state.billType||'expense'; const cates=type==='expense'?['餐饮','交通','购物','娱乐','生活','医疗','学习','其他']:['工资','奖金','投资','兼职','红包','其他']; const cate=state.billCate||cates[0]; const date=state.billDate||todayISO(); if(amount>0){ db.finance.bills.push({id:uid(),type,amount,cate,date,note}); saveDB(); render(); document.getElementById('billNote').value=''; document.getElementById('billAmount').value=''; } }
     else if(d.togglecdadd){ state.showCdAdd=!state.showCdAdd; render(); }
     else if(d.addcd){ const f=t.closest('[data-cd]'); if(f){ const g=k=>f.querySelector('[data-key="'+k+'"]').value; const cb=f.querySelector('[data-key="repeat"]'); const nm=(g('name')||'').trim(); const dt=g('date'); if(!nm){ toast('请填写事件名称'); return; } if(!dt){ toast('请选择目标日期'); return; } db.countdowns.push({id:uid(),name:nm,date:dt,repeat:cb?cb.checked:false}); saveDB(); render(); toast('已添加倒计时'); } }
+    else if(d.submit){ const f=t.closest('form'); if(f){ handleForm(f); } }
     else if(d.addtoday){ const id=d.addtoday==='income'?'todayIncome':'todayExpense'; const amount=Number(document.getElementById(id).value)||0; if(amount>0){ const type=d.addtoday; const cate=type==='income'?'其他收入':'其他支出'; db.finance.bills.push({id:uid(),type,amount,cate,date:todayISO(),note:''}); saveDB(); render(); toast('已录入'); } }
     else if(d.earlycheck){
       const now=new Date();
