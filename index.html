@@ -1945,12 +1945,12 @@ function renderCountdown(){
       '<button class="del" data-delcd="'+x.id+'">×</button>'+
     '</div>';
   }).join('');
-  const form=state.showCdAdd?'<form data-cd="1"><div class="row" style="align-items:center;gap:10px;margin-top:12px">'+
+  const form=state.showCdAdd?'<div data-cd="1"><div class="row" style="align-items:center;gap:10px;margin-top:12px">'+
     '<label class="fld" style="flex:1"><span>事件名称</span><input data-key="name" type="text" placeholder="例如：我的生日"></label>'+
     '<label class="fld" style="flex:0 0 150px"><span>目标日期</span><input data-key="date" type="date"></label>'+
     '<label class="fld" style="flex:0 0 80px;display:flex;align-items:center;gap:6px"><input data-key="repeat" type="checkbox" style="width:18px;height:18px"> 每年</label>'+
-    '<button class="btn primary" type="submit" style="flex:0 0 auto">添加</button>'+
-  '</div></form>':'';
+    '<button class="btn primary" type="button" data-addcd style="flex:0 0 auto">添加</button>'+
+  '</div></div>':'';
   const addBtn='<button class="add-btn" data-togglecdadd title="添加倒计时">'+I.plus+'</button>';
   return '<div class="card"><div class="section-title">'+I.hourglass+' 倒计时'+addBtn+'</div>'+(list||'<div class="empty">还没有倒计时，点击右上角添加</div>')+form+'</div>';
 }
@@ -2979,7 +2979,7 @@ function bindContent(){
   });
   // clicks
   c.onclick=(e)=>{
-    const t=e.target.closest('[data-act],[data-done],[data-check],[data-checktoday],[data-planchk],[data-delplan],[data-quadadd],[data-calprev],[data-calnext],[data-calday],[data-monthview],[data-heat],[data-delexam],[data-delgen],[data-bkedit],[data-delbook],[data-bkcur],[data-delbill],[data-delbudget],[data-delsave],[data-delasset],[data-delhappy],[data-go],[data-monthfold],[data-wateradd],[data-delwater],[data-savegoal],[data-delcd],[data-delmemo],[data-billday],[data-billcate],[data-billtype],[data-addbill],[data-togglecdadd],[data-addtoday],[data-earlycheck],[data-earlyadd],[data-earlyview],[data-earlytoggle],[data-encheck],[data-excheck],[data-entoggle],[data-enitem],[data-enprev],[data-ennext],[data-recrange],[data-gosub],[data-delrec],[data-editfin],[data-billfilter],[data-expcate],[data-inccate],[data-addexpense],[data-addincome],[data-goexp],[data-goinc]');
+    const t=e.target.closest('[data-act],[data-done],[data-check],[data-checktoday],[data-planchk],[data-delplan],[data-quadadd],[data-calprev],[data-calnext],[data-calday],[data-monthview],[data-heat],[data-delexam],[data-delgen],[data-bkedit],[data-delbook],[data-bkcur],[data-delbill],[data-delbudget],[data-delsave],[data-delasset],[data-delhappy],[data-go],[data-monthfold],[data-wateradd],[data-delwater],[data-savegoal],[data-delcd],[data-delmemo],[data-billday],[data-billcate],[data-billtype],[data-addbill],[data-togglecdadd],[data-addcd],[data-addtoday],[data-earlycheck],[data-earlyadd],[data-earlyview],[data-earlytoggle],[data-encheck],[data-excheck],[data-entoggle],[data-enitem],[data-enprev],[data-ennext],[data-recrange],[data-gosub],[data-delrec],[data-editfin],[data-billfilter],[data-expcate],[data-inccate],[data-addexpense],[data-addincome],[data-goexp],[data-goinc]');
     if(!t) return;
     const d=t.dataset;
     if(d.done){ const it=db.plan.daily.find(x=>x.id===d.done); if(it){it.done=true;it.archivedDate=todayISO();saveDB();render();} }
@@ -3015,6 +3015,7 @@ function bindContent(){
     else if(d.billcate){ state.billCate=d.billcate; render(); }
     else if(d.addbill){ const note=document.getElementById('billNote').value; const amount=Number(document.getElementById('billAmount').value)||0; const type=state.billType||'expense'; const cates=type==='expense'?['餐饮','交通','购物','娱乐','生活','医疗','学习','其他']:['工资','奖金','投资','兼职','红包','其他']; const cate=state.billCate||cates[0]; const date=state.billDate||todayISO(); if(amount>0){ db.finance.bills.push({id:uid(),type,amount,cate,date,note}); saveDB(); render(); document.getElementById('billNote').value=''; document.getElementById('billAmount').value=''; } }
     else if(d.togglecdadd){ state.showCdAdd=!state.showCdAdd; render(); }
+    else if(d.addcd){ const f=t.closest('[data-cd]'); if(f){ const g=k=>f.querySelector('[data-key="'+k+'"]').value; const cb=f.querySelector('[data-key="repeat"]'); const nm=(g('name')||'').trim(); const dt=g('date'); if(!nm){ toast('请填写事件名称'); return; } if(!dt){ toast('请选择目标日期'); return; } db.countdowns.push({id:uid(),name:nm,date:dt,repeat:cb?cb.checked:false}); saveDB(); render(); toast('已添加倒计时'); } }
     else if(d.addtoday){ const id=d.addtoday==='income'?'todayIncome':'todayExpense'; const amount=Number(document.getElementById(id).value)||0; if(amount>0){ const type=d.addtoday; const cate=type==='income'?'其他收入':'其他支出'; db.finance.bills.push({id:uid(),type,amount,cate,date:todayISO(),note:''}); saveDB(); render(); toast('已录入'); } }
     else if(d.earlycheck){
       const now=new Date();
