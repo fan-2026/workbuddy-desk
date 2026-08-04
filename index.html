@@ -4,15 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Workbuddy 工作台</title>
-<!--PWA_INJECTED-->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#3E6E96">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Workbuddy">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-
 <style>
   :root{
     --green:#1F3A52; --green2:#2E5A7A; --mint:#4F8CBF; --mint-soft:#E8F0F6;
@@ -66,6 +57,8 @@
   .navitem .del{margin-left:auto;opacity:0;font-size:12px;color:#ffb4ae}
   .navitem:hover .del{opacity:.8}
   .navitem .del:hover{opacity:1}
+  .navitem .renamebtn{margin-left:6px;opacity:.5;font-size:11.5px;color:#C6DCEA;cursor:pointer;flex:0 0 auto;border:1px solid rgba(255,255,255,.16);border-radius:6px;padding:1px 6px;transition:.15s}
+  .navitem .renamebtn:hover{opacity:1;background:rgba(255,255,255,.14)}
   .navgroup{position:relative}
   .navgroup.dragging{opacity:.55}
   .navgroup.dragging .navitem{background:var(--mint-soft);color:#16222E;box-shadow:0 6px 16px rgba(22,34,46,.22)}
@@ -82,6 +75,8 @@
   .subitem.active{color:#fff;font-weight:700}
   .subitem .del{margin-left:auto;opacity:0;font-size:11px;color:#ffb4ae}
   .subitem:hover .del{opacity:.7}
+  .subitem .renamebtn{margin-left:auto;opacity:.55;font-size:10.5px;color:#bcd2c8;cursor:pointer;flex:0 0 auto;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:0 5px;transition:.15s}
+  .subitem .renamebtn:hover{opacity:1;background:rgba(255,255,255,.1)}
   .sidefoot{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);display:flex;gap:8px;flex-wrap:wrap}
   .sidefoot .btn{background:rgba(255,255,255,.12);color:#D4E2EC;font-size:12.5px;flex:1;min-width:90px}
   .sidefoot .btn:hover{background:rgba(255,255,255,.18)}
@@ -1710,10 +1705,12 @@ function renderNav(){
     const item=document.createElement('button');
     item.className='navitem'+(active?' active':'');
     item.innerHTML='<span class="grip" data-drag="'+m.id+'" title="拖动排序">⠿</span>'+I[m.icon]+'<span>'+esc(m.name)+'</span>'+
-      (m.subs.length?'<span style="margin-left:auto;opacity:.6">'+I.chev+'</span>':'')+
-      '<span class="del" data-delmod="'+m.id+'">删除</span>';
+      '<span class="renamebtn" data-rename="'+m.id+'">改名</span>'+
+      (m.subs.length?'<span style="margin-left:6px;opacity:.6">'+I.chev+'</span>':'')+
+      '<span class="del" data-delmod="'+m.id+'" style="margin-left:auto">删除</span>';
     item.onclick=(e)=>{
       if(e.target.closest('[data-drag]')) return;
+      if(e.target.dataset.rename){ doRename(e.target.dataset.rename); return; }
       if(e.target.dataset.delmod){ if(confirm('确认删除模块「'+m.name+'」？数据将一并清除。')){ deleteModule(m.id);} return; }
       if(m.id==='records' || m.id==='finance'){ state.top=m.id; state.sub=null; }
       else if(m.subs.length){ state.top=m.id; state.sub=state.sub&&hasSub(m.id,state.sub)?state.sub:m.subs[0].id; }
@@ -1728,8 +1725,9 @@ function renderNav(){
       m.subs.forEach(s=>{
         const si=document.createElement('button');
         si.className='subitem'+(active&&state.sub===s.id?' active':'');
-        si.innerHTML='<span>'+esc(s.name)+'</span><span class="del" data-delsub="'+m.id+':'+s.id+'">✕</span>';
+        si.innerHTML='<span>'+esc(s.name)+'</span><span class="renamebtn" data-rename="'+m.id+':'+s.id+'">改名</span><span class="del" data-delsub="'+m.id+':'+s.id+'">✕</span>';
         si.onclick=(e)=>{ e.stopPropagation();
+          if(e.target.dataset.rename){ doRename(e.target.dataset.rename); return; }
           if(e.target.dataset.delsub){ if(confirm('确认删除「'+s.name+'」？')) deleteSub(m.id,s.id); return; }
           state.top=m.id; state.sub=s.id; closeSidebar(); render();
         };
@@ -1752,6 +1750,20 @@ function renderNav(){
 function hasSub(top,sub){const m=db.modules.find(x=>x.id===top);return m&&m.subs.some(s=>s.id===sub);}
 function deleteModule(id){ db.modules=db.modules.filter(m=>m.id!==id); if(db[id]) delete db[id]; if(state.top===id){state.top='home';state.sub=null;} saveDB(); render(); toast('已删除模块'); }
 function deleteSub(top,sub){ const m=db.modules.find(x=>x.id===top); if(m) m.subs=m.subs.filter(s=>s.id!==sub); if(db[top]) delete db[top][sub]; if(state.top===top&&state.sub===sub){state.sub=m&&m.subs.length?m.subs[0].id:null;} saveDB(); render(); toast('已删除子模块'); }
+function doRename(key){
+  let m, s=null, oldName='';
+  if(key.indexOf(':')>=0){ const p=key.split(':'); m=db.modules.find(x=>x.id===p[0]); s=m&&m.subs.find(y=>y.id===p[1]); oldName=s?s.name:''; }
+  else { m=db.modules.find(x=>x.id===key); oldName=m?m.name:''; }
+  if(!m) return;
+  const nn=prompt('重命名栏目：', oldName);
+  if(nn===null) return;
+  const name=nn.trim();
+  if(!name) return;
+  if(s) s.name=name; else m.name=name;
+  saveDB(); renderNav();
+  if(!s && state.top===m.id){ const t=document.getElementById('pageTitle'); if(t) t.textContent=name; }
+  toast('已重命名');
+}
 
 /* 左侧导航拖拽排序（指针事件，桌面+触屏通用） */
 let navDrag=null;
@@ -2495,7 +2507,7 @@ function countRecords(sub,range){
 function recordMonthBars(){
   const y=new Date().getFullYear();
   const recMod=db.modules.find(m=>m.id==='records');
-  const types=(recMod?recMod.subs:[]).map(s=>({k:s.id,name:(REC_META[s.id]||{name:s.name}).name,color:(REC_META[s.id]||{color:'#888'}).color}));
+  const types=(recMod?recMod.subs:[]).map(s=>({k:s.id,name:s.name,color:(REC_META[s.id]||{color:'#888'}).color}));
   const months=[];
   for(let i=1;i<=12;i++){
     const ym=y+'-'+String(i).padStart(2,'0');
@@ -2518,7 +2530,7 @@ function renderRecords(){
   const range=state.recRange||'month';
   const recMod=db.modules.find(m=>m.id==='records');
   const recSubs=recMod?recMod.subs:[];
-  const types=recSubs.map(s=>({k:s.id,name:(REC_META[s.id]||{name:s.name}).name,unit:(REC_META[s.id]||{unit:''}).unit})).concat([{k:'reading',name:'阅读',unit:'本',src:true}]);
+  const types=recSubs.map(s=>({k:s.id,name:s.name,unit:(REC_META[s.id]||{unit:''}).unit})).concat([{k:'reading',name:'阅读',unit:'本',src:true}]);
   const counts=types.map(t=>t.src?db.reading.books.length:countRecords(t.k,range));
   const tabs=[['week','本周'],['month','本月'],['year','本年']].map(v=>'<button class="tab'+(range===v[0]?' active':'')+'" data-recrange="'+v[0]+'">'+v[1]+'</button>').join('');
   const cards=types.map((t,i)=>{
@@ -2529,7 +2541,7 @@ function renderRecords(){
   const bars=recordMonthBars();
   // 本月精选回忆
   const picks=[];
-  const pickTypes=recSubs.map(s=>({k:s.id,name:(REC_META[s.id]||{name:s.name}).name}));
+  const pickTypes=recSubs.map(s=>({k:s.id,name:s.name}));
   pickTypes.forEach(t=>{
     const arr=(db.records[t.k]||[]).filter(x=>x.rate);
     if(!arr.length) return;
@@ -3176,12 +3188,6 @@ function init(){
   startClock();
 }
 init();
-</script>
-<!--SW_INJECTED-->
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(console.error);
-}
 </script>
 </body>
 </html>
