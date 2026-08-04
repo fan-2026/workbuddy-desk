@@ -419,6 +419,7 @@
       <div class="topbtns">
         <button class="btn" id="btnExport">导出备份</button>
         <button class="btn" id="btnImport">导入恢复</button>
+        <button class="btn" id="btnClearSeed">清空示例(保留笔记)</button>
         <input type="file" id="fileInput" accept="application/json" style="display:none">
       </div>
     </header>
@@ -1578,50 +1579,19 @@ function freshDB(){
   return d;
 }
 function seedExamples(d){
-  const t=new Date(); const iso=d=>d.toISOString().slice(0,10);
-  const past=n=>{const x=new Date(t);x.setDate(x.getDate()-n);return iso(x);};
-  const fut=n=>{const x=new Date(t);x.setDate(x.getDate()+n);return iso(x);};
-  d.plan.daily.push(
-    {id:uid(),title:'完成产品说明书评审',desc:'',prio:'high',quadrant:'iu',start:'14:00',end:'16:00',progress:40,done:false},
-    {id:uid(),title:'整理本周打卡数据',desc:'',prio:'mid',quadrant:'inu',start:'20:00',end:'21:00',progress:0,done:false},
-    {id:uid(),title:'阅读30分钟',desc:'',prio:'low',quadrant:'ninu',start:'21:30',end:'22:00',progress:0,done:false}
-  );
-  d.plan.weekly.push(
-    {id:uid(),title:'完成章节习题',desc:'',quadrant:'iu',sdate:fut(0),due:fut(1),progress:0,done:false},
-    {id:uid(),title:'读完一章专业书',desc:'',quadrant:'inu',sdate:fut(1),due:fut(3),progress:20,done:false},
-    {id:uid(),title:'回复本周邮件',desc:'',quadrant:'niu',sdate:fut(0),due:fut(0),progress:0,done:false}
-  );
-  d.checkin.early.push(
-    {id:uid(),date:past(1),time:'06:15'},
-    {id:uid(),date:past(2),time:'06:42'},
-    {id:uid(),date:past(3),time:'06:03'}
-  );
-  d.plan.monthly.push(
-    {id:uid(),title:'完成月度复盘',desc:'',prio:'high',sdate:fut(0),due:fut(0),progress:30,done:false},
-    {id:uid(),title:'制定下月预算',desc:'',prio:'mid',sdate:fut(2),due:fut(5),progress:0,done:false},
-    {id:uid(),title:'整理学习资料',desc:'',prio:'low',sdate:fut(5),due:fut(10),progress:0,done:false}
-  );
-  d.finance.bills.push(
-    {id:uid(),type:'expense',amount:38.5,cate:'餐饮',date:fut(0),note:'午餐'},
-    {id:uid(),type:'income',amount:8000,cate:'工资',date:fut(0),note:'月薪'},
-    {id:uid(),type:'expense',amount:120,cate:'交通',date:past(1),note:'打车'}
-  );
-  d.finance.budgets.push({id:uid(),cate:'餐饮',month:t.getMonth()+1,budget:1500});
-  d.finance.savings.push({id:uid(),name:'旅行基金',target:10000,saved:3200});
-  d.finance.assets.push(
-    {id:uid(),name:'活期存款',amount:25000,kind:'asset'},
-    {id:uid(),name:'信用卡欠款',amount:4000,kind:'liability'}
-  );
-  d.reading.books.push({id:uid(),title:'被讨厌的勇气',author:'岸见一郎',total:300,current:120});
-  d.countdowns.push({id:uid(),name:'我的生日',date:'2026-10-09',repeat:true});
-  d.memo.push({id:uid(),title:'备忘示例',content:'灵感、想法、素材，随记随存，本地保存',date:fut(0)});
-  d.happiness.push({id:uid(),date:fut(0),text:'楼下咖啡店出了新品，味道不错',mood:'开心'});
-  // 喝水示例：今天 12:30 喝 500ml
-  d.checkin.water.push({id:uid(),date:fut(0),amount:500,time:'12:30'});
+  // 用户要求：除「阅读笔记」外的所有示例数据均不预置；阅读笔记由 SEED_READING_NOTES 一次性种子提供
   return d;
 }
 const SEED_READING_NOTES = ["水流默默地积聚威力，看似谦逊低调，可谁要轻视了它，它危险重重的能量就会爆发。", "教育者容易犯的一个错误是，将强者用于自我提升的知识，直接灌输给生存能力都不足的弱者。这背后往往是息事宁人的懒惰和教育能力的不足。", "善良本身没有错，错在没有分清对象就一味要求自己善良", "在这个世界上，没有任何一个人和你的利益是完全一致的", "如果一个人自己都觉得活着没有希望，很痛苦，那么其他人是死是活，他可能也没那么关心了，甚至还会觉得小孩子掉进井里反倒是解脱", "学习让你可以选择做这个还是做那个，也可以轻松退回到下一个档，但是，没有相关技术的人想要赚你的这份技术钱，就没有这个机会了。", "今天下的雪，明天可能就融化了，今天不去看花，明天可能就凋落了", "自然界不谈强弱，只谈适合", "不要去做其他人，其他人都有人做了", "弗洛伊德曾说，未被表达的情绪永远都不会消失，它们只是暂时被\"活埋\"了，有朝一日会以更丑恶的方式爆发出来", "不要过多介入他人的因果，也不要让他人介入你的心", "作为老师，要学习像太阳一样，只是发出光和热。每个人对阳光的反应不同，有人觉得刺眼，有人觉得温暖。", "\"慧极必伤，为什么要浪费自己的时间和精力去教育她呢？我没有义务教育她，为小事斗气不值得，伤害的是我们自己的身体。发火也好，争论也好，都是实现目标的方法，没有想好要达到什么目的就发生冲突，是很傻的。\"", "花半秒钟就看清事物本质的人和一辈子也看不清的人，注定是截然不同的人生。\"", "打架一定要争出输赢，为什么？因为不彻底打败对方，对方心里不服输，一定蠢蠢欲动，后患无穷。\"", "战略上藐视敌人，战术上重视敌人", "不要让别人总是免费从你这里拿走好处", "一个借钱太多而无法偿还的人，根本不想去赚钱还钱，因为他已经认定这是个不可能完成的任务，他只会希望债主消失，那么他的债也就消失了，威胁他自尊的人也就消失了。这就是人性。", "永远不要用利益去试探人性和感情，因为你永远都不可能赢", "我们既要相信当时当刻的真实，也需要防范未来可能的变化，不要考验自己，也不要考验别人", "相信人，但不要相信人性", "一个人如何看待自己，会影响甚至决定别人如何看待自己。人性就是如此，你越卑微小心低姿态，越容易被轻视；越自尊自信有能力，越被重视。不要等别人来爱你，不要等别人来拯救你，越是没人爱，越要爱自己，越是身处沼泽，越要救自己于水火。把时间、精力、金钱狠狠投入到自己身上，对身体和情绪都有好处。你越觉得自己有价值，就越会好好经营自己，这样更容易成功，别人也会更尊重你的想法，重视你的付出。", "罗翔老师说：\"务必请你一而再，再而三，千次万次毫不犹豫地救自己于这世间水火。", "人与人的关系就是这样，有些人只能是一段时间的同伴，旅程结束，就不要留恋了，继续往前走，前面又有新的风景。\"", "人际交往的本质是价值交换，你首先要看看自己有什么可以交换的", "牢牢把握主动性，放下无用的枷锁，以结果为导向，在所处的位置用所有资源做力所能及之事，永不放弃，是实现幸福的途径。", "一定不要把自己放在'受害者'的位置上，因为我们默认有罪的人才需要改变，一旦你坐定了'受害者'的位置，就容易强调别人的责任、外界的环境，而自己心安理得地不行动。自己的利益自己都不去维护，谁又会来管？欺负你的人不会因你抱怨就收敛。自怜对事情的改变没有任何用处。公平往往不是等来的，是争取来的。不要总想'他害我'，要想'怎么办'。\"", "俞敏洪说：\"你不努力，永远不会有人对你公平，只有你努力了，有了资源和话语权，才可能有为自己争取公平的机会。\"", "鸟不会害怕树枝断裂，因为它相信的不是树枝，而是自己的翅膀。如果你一直躺在受害者的立场上，意识里就永远需要有一个加害者为你的痛苦负责。这样自己就可以一直不爬起来。如果将成长的本能变成\"被救赎\"的期望，我们的翅膀就断了。", "我们只能管好自己，我们不拿，但任谁拿了去，都是他自己的运气。\"", "弗洛伊德在《梦的解析》一书中写道：压抑的情感不会消失，它们会被活埋，但会在以后以更丑陋的方式出现。", "人生的意义从来不是分析出来的，而是由无数个体验到的、直击心底的、无法言表却充实笃定的感受，支撑成无边延伸的线。", "自信铸就了一个人的优秀，而固执恰恰是自信的重要组成部分。"];
 
+function clearExamplesKeepReading(){
+  if(!confirm('确定清空除「阅读笔记」以外的全部数据吗？模块结构、自定义内容、阅读笔记都会保留。')) return;
+  const notes=(db.reading&&db.reading.notes)?db.reading.notes:[];
+  const modules=db.modules; const custom=db.custom||{}; const meta=db.meta||{created:Date.now()};
+  db=freshDB();
+  db.reading.notes=notes; db._seededNotes=true; db.modules=modules; db.custom=custom; db.meta=meta;
+  loadDB(); saveDB(); render(); toast('已清空其他示例，保留阅读笔记');
+}
 function loadDB(){
   let raw=null; try{raw=localStorage.getItem(DB_KEY);}catch(e){}
   if(raw){ try{db=JSON.parse(raw);}catch(e){db=freshDB();} }
@@ -3183,7 +3153,7 @@ function openSidebar(){ document.getElementById('sidebar').classList.add('open')
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('scrim').classList.remove('open'); }
 
 /* ============ 版本与更新 ============ */
-const BUILD='20260804.4';
+const BUILD='20260804.5';
 function showVersion(){
   let tag=document.getElementById('verTag');
   if(!tag){
@@ -3219,6 +3189,7 @@ function init(){
   document.getElementById('fileInput').onchange=e=>{ if(e.target.files[0]) importDB(e.target.files[0]); e.target.value=''; };
   document.getElementById('btnCustom').onclick=openCustom;
   document.getElementById('btnReset').onclick=resetDefault;
+  document.getElementById('btnClearSeed').onclick=clearExamplesKeepReading;
   document.getElementById('modalMask').onclick=e=>{ if(e.target.id==='modalMask') closeModal(); };
   updateNet();
   render();
