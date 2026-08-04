@@ -2982,6 +2982,7 @@ function bindContent(){
     const t=e.target.closest('[data-act],[data-done],[data-check],[data-checktoday],[data-planchk],[data-delplan],[data-quadadd],[data-calprev],[data-calnext],[data-calday],[data-monthview],[data-heat],[data-delexam],[data-delgen],[data-bkedit],[data-delbook],[data-bkcur],[data-delbill],[data-delbudget],[data-delsave],[data-delasset],[data-delhappy],[data-go],[data-monthfold],[data-wateradd],[data-delwater],[data-savegoal],[data-delcd],[data-delmemo],[data-billday],[data-billcate],[data-billtype],[data-addbill],[data-togglecdadd],[data-addcd],[data-addtoday],[data-earlycheck],[data-earlyadd],[data-earlyview],[data-earlytoggle],[data-encheck],[data-excheck],[data-entoggle],[data-enitem],[data-enprev],[data-ennext],[data-recrange],[data-gosub],[data-delrec],[data-editfin],[data-billfilter],[data-expcate],[data-inccate],[data-addexpense],[data-addincome],[data-goexp],[data-goinc]');
     if(!t) return;
     const d=t.dataset;
+    for(const _k in d){ if(d[_k]==='') d[_k]=true; }
     if(d.done){ const it=db.plan.daily.find(x=>x.id===d.done); if(it){it.done=true;it.archivedDate=todayISO();saveDB();render();} }
     else if(d.check){ state.top='checkin'; state.sub=d.check; render(); }
     else if(d.checktoday){ const k=d.checktoday; if(!db.checkin[k].includes(todayISO())){db.checkin[k].push(todayISO());saveDB();render();toast('打卡成功');} }
